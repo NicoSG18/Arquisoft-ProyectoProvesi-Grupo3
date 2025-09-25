@@ -40,10 +40,10 @@ class Command(BaseCommand):
             )
             lista_pedidos.append(pedido)
 
-        # Se usa bulk_create para insertar todos los pedidos en una sola consulta, es mucho más eficiente.
+    
         Pedido.objects.bulk_create(lista_pedidos)
 
-        # ---  Crear Transacciones para esos Pedidos ---
+        
         self.stdout.write('Asociando transacciones a los pedidos...')
         pedidos_creados = Pedido.objects.all()
         lista_transacciones = []
