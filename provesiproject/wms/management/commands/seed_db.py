@@ -7,7 +7,7 @@ from wms.models import Pedido, TransaccionBancaria, Colaborador
 
 # Se define una lista de bancos para usar en los datos de prueba.
 BANCOS = ["Bancolombia", "Davivienda", "BBVA", "Banco de Bogotá", "Nequi"]
-TOTAL_PEDIDOS = 5000 # Cantidad de pedidos a crear.
+TOTAL_PEDIDOS = 200 # Cantidad de pedidos a crear.
 
 class Command(BaseCommand):
     help = f'Crea datos de prueba en la base de datos, incluyendo {TOTAL_PEDIDOS} pedidos.'
