@@ -2,10 +2,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# ---------------------------------------------------------------------------
-# Modelo para gestionar las Bodegas
-# El enunciado menciona que la empresa planea abrir bodegas en otras ciudades.
-# ---------------------------------------------------------------------------
 class Bodega(models.Model):
     nombre = models.CharField(max_length=150, help_text="Ej: Bodega Principal Cúcuta")
     ciudad = models.CharField(max_length=100)
@@ -14,11 +10,7 @@ class Bodega(models.Model):
     def __str__(self):
         return self.nombre
 
-# ---------------------------------------------------------------------------
-# Modelo para la Ubicación física de un producto dentro de una Bodega
-# Esto es clave para resolver problemas de inventario extraviado y desorden[cite: 51, 52].
-# Corresponde al proceso de "desenglobe"[cite: 62].
-# ---------------------------------------------------------------------------
+
 class Ubicacion(models.Model):
     bodega = models.ForeignKey(Bodega, on_delete=models.CASCADE, related_name='ubicaciones')
     estante = models.CharField(max_length=50)
@@ -31,9 +23,7 @@ class Ubicacion(models.Model):
     def __str__(self):
         return f"{self.bodega.nombre} - Estante {self.estante}, Fila {self.fila}, Columna {self.columna}"
 
-# ---------------------------------------------------------------------------
-# Modelo para los Productos
-# ---------------------------------------------------------------------------
+
 class Producto(models.Model):
     sku = models.CharField(max_length=100, unique=True, help_text="Identificador único del producto")
     nombre = models.CharField(max_length=200)
@@ -105,10 +95,7 @@ class DetallePedido(models.Model):
     def __str__(self):
         return f"{self.cantidad} x {self.producto.nombre} en Pedido {self.pedido.codigo}"
 
-# ---------------------------------------------------------------------------
-# Modelo de Transacción, CRUCIAL para tu ASR de latencia
-# Necesario para el paso donde se debe verificar el pago del cliente[cite: 24, 25].
-# ---------------------------------------------------------------------------
+
 class TransaccionBancaria(models.Model):
     pedido = models.ForeignKey(Pedido, related_name='transacciones', on_delete=models.CASCADE)
     monto = models.DecimalField(max_digits=12, decimal_places=2)
