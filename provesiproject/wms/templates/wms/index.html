@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Vendedor - Provesi</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        #contenedor-pedidos { margin-top: 1em; border: 1px solid #ccc; padding: 1em; }
+        .pedido { border-bottom: 1px solid #eee; padding-bottom: 1em; margin-bottom: 1em; }
+        .transaccion { margin-left: 2em; font-size: 0.9em; }
+        #spinner { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>Panel de Validación de Pagos</h1>
+    <p>Interfaz de prueba para el ASR de latencia.</p>
+
+    <button id="cargar-btn">Cargar Pedidos Pendientes</button>
+    <div id="spinner">Cargando...</div>
+    <hr>
+    
+    <h2>Resultados de la API:</h2>
+    <div id="contenedor-pedidos">
+        </div>
+
+    <script>
+        // Se seleccionan los elementos del DOM
+        const botonCargar = document.getElementById('cargar-btn');
+        const contenedor = document.getElementById('contenedor-pedidos');
+        const spinner = document.getElementById('spinner');
+
+        // Se añade un "escuchador" de eventos al botón
+        botonCargar.addEventListener('click', () => {
+            // Se limpia el contenido anterior y se muestra el spinner
+            contenedor.innerHTML = 'Esperando datos...';
+            spinner.style.display = 'block';
+
+            // Se usa la función 'fetch' de JavaScript para llamar a la API
+            fetch('/api/pedidos/pendientes-validacion/')
+                .then(response => {
+                    // Se verifica que la respuesta de la red sea exitosa (HTTP 200)
+                    if (!response.ok) {
+                        throw new Error('Error en la red: ' + response.statusText);
+                    }
+                    return response.json(); // Se convierte la respuesta a formato JSON
+                })
+                .then(data => {
+                    // Se procesan los datos recibidos
+                    spinner.style.display = 'none'; // Se oculta el spinner
+                    contenedor.innerHTML = ''; // Se limpia el contenedor
+
+                    if (data.length === 0) {
+                        contenedor.innerHTML = '<p>No se encontraron pedidos pendientes.</p>';
+                        return;
+                    }
+
+                    // Por cada pedido en los datos, se crea un bloque de HTML
+                    data.forEach(pedido => {
+                        const pedidoDiv = document.createElement('div');
+                        pedidoDiv.className = 'pedido';
+                        
+                        let transaccionesHtml = '';
+                        pedido.transacciones.forEach(tx => {
+                            transaccionesHtml += `
+                                <div class="transaccion">
+                                    - Transacción #${tx.id}: $${tx.monto} (${tx.banco_origen}) - Validada: ${tx.validada}
+                                </div>
+                            `;
+                        });
+
+                        pedidoDiv.innerHTML = `
+                            <strong>Pedido Código: ${pedido.codigo}</strong> (Estado: ${pedido.estado})
+                            <br>
+                            <em>Transacciones asociadas:</em>
+                            ${transaccionesHtml}
+                        `;
+                        contenedor.appendChild(pedidoDiv);
+                    });
+                })
+                .catch(error => {
+                    // Se maneja cualquier error que ocurra durante la llamada
+                    spinner.style.display = 'none';
+                    contenedor.innerHTML = `<p style="color: red;"><strong>Error al cargar los datos:</strong> ${error.message}</p>`;
+                    console.error('Hubo un problema con la operación fetch:', error);
+                });
+        });
+    </script>
+</body>
+</html>
