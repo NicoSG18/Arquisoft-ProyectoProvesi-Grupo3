@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from wms.models import Pedido, TransaccionBancaria, Colaborador
 
-# Se define una lista de bancos para usar en los datos de prueba.
+
 BANCOS = ["Bancolombia", "Davivienda", "BBVA", "Banco de Bogotá", "Nequi"]
 TOTAL_PEDIDOS = 200 # Cantidad de pedidos a crear.
 
