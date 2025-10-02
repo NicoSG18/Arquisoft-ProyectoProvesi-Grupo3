@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i41fiho%$m@euzjdh0d3cg0-)elbw5^^-x-e)nn4u10(!%45mz'
+# Lee la SECRET_KEY de una variable de entorno, con un valor por defecto si no la encuentra.
+SECRET_KEY = config('SECRET_KEY', default='clave')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Lee el valor de DEBUG. Lo convierte a booleano y por defecto es True.
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+# Permite todos los hosts en desarrollo, pero en producción se debería especificar.
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -76,10 +81,9 @@ WSGI_APPLICATION = 'provesiproject.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
+    )
 }
 
 
