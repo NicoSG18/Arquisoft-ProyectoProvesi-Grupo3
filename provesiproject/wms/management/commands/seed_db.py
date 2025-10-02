@@ -5,9 +5,9 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from wms.models import Pedido, TransaccionBancaria, Colaborador
 
-# Se define una lista de bancos para usar en los datos de prueba.
+
 BANCOS = ["Bancolombia", "Davivienda", "BBVA", "Banco de Bogotá", "Nequi"]
-TOTAL_PEDIDOS = 5000 # Cantidad de pedidos a crear.
+TOTAL_PEDIDOS = 200 # Cantidad de pedidos a crear.
 
 class Command(BaseCommand):
     help = f'Crea datos de prueba en la base de datos, incluyendo {TOTAL_PEDIDOS} pedidos.'
@@ -15,19 +15,19 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.SUCCESS('Iniciando el proceso de población de la base de datos...'))
 
-        # --- 1. Limpiar datos existentes para evitar duplicados ---
+        
         self.stdout.write('Limpiando datos antiguos...')
         TransaccionBancaria.objects.all().delete()
         Pedido.objects.all().delete()
         Colaborador.objects.all().delete()
         User.objects.filter(is_superuser=False).delete()
 
-        # --- 2. Crear usuarios y colaboradores de prueba ---
+        
         self.stdout.write('Creando colaboradores...')
         vendedor_user, _ = User.objects.get_or_create(username='vendedor_test', first_name='Vendedor', last_name='Prueba')
         Colaborador.objects.create(usuario=vendedor_user, rol='vendedor')
 
-        # --- 3. Crear Pedidos en el estado relevante para el ASR ---
+        
         self.stdout.write(f'Creando {TOTAL_PEDIDOS} pedidos de prueba...')
         
         lista_pedidos = []
@@ -40,10 +40,10 @@ class Command(BaseCommand):
             )
             lista_pedidos.append(pedido)
 
-        # Se usa bulk_create para insertar todos los pedidos en una sola consulta, es mucho más eficiente.
+    
         Pedido.objects.bulk_create(lista_pedidos)
 
-        # --- 4. Crear Transacciones para esos Pedidos ---
+        
         self.stdout.write('Asociando transacciones a los pedidos...')
         pedidos_creados = Pedido.objects.all()
         lista_transacciones = []
