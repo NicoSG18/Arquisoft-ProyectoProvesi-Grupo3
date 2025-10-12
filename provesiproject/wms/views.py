@@ -23,7 +23,7 @@ class PedidosPendientesValidacionView(APIView):
         start_time = time.time()
 
         # --- Táctica de Arquitectura #1: Caching ---
-        CACHE_KEY = "pedidos_pendientes_validacion"
+        CACHE_KEY = "por_verificar"
         datos_en_cache = cache.get(CACHE_KEY)
         
         if datos_en_cache:
@@ -39,7 +39,7 @@ class PedidosPendientesValidacionView(APIView):
         # 2. Usamos prefetch_related para traer todas las transacciones asociadas en UNA sola consulta adicional.
         #    Esto evita el problema "N+1" y es crucial para el rendimiento.
         pedidos = Pedido.objects.filter(
-            estado='empacado_x_despachar'
+            estado='por_verificar'
         ).prefetch_related('transacciones')
 
         # Usamos el serializer para convertir los datos a JSON
