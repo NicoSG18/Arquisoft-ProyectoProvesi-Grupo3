@@ -1,0 +1,68 @@
+#!/bin/bash
+set -eux
+apt-get update -y
+apt-get install -y python3-pip git postgresql-client
+
+# Clonar app del lab (branch Message-Broker)
+cd /home/ubuntu
+git clone https://github.com/NicoSG18/Arquisoft-ProyectoProvesi-Grupo3
+cd  NicoSG18/Arquisoft-ProyectoProvesi-Grupo3
+git checkout TerraformLatencia
+pip3 install -r requirements.txt --break-system-packages
+
+# Configurar settings.py: SMTP y DB (RDS)
+python3 - <<PY
+import io, sys, re, json, pathlib
+p = pathlib.Path("monitoring/settings.py")
+s = p.read_text()
+
+s = s.replace("smtp.office365.com", "smtp.gmail.com")
+s = s.replace("EMAIL_PORT = 587", "EMAIL_PORT = 587")
+s = re.sub(r"EMAIL_HOST_USER\s*=.*", "EMAIL_HOST_USER = '${email_host_user!s}'", s)
+s = re.sub(r"EMAIL_HOST_PASSWORD\s*=.*", "EMAIL_HOST_PASSWORD = '${email_host_password!s}'", s)
+
+# Config DB block (simple patch a DATABASES):
+s = re.sub(
+    r"DATABASES\s*=\s*\{.*?\}",
+    "DATABASES = {\n  'default': {\n    'ENGINE': 'django.db.backends.postgresql_psycopg2',\n    'NAME': 'monitoring_db',\n    'USER': '${rds_username}',\n    'PASSWORD': '${rds_password}',\n    'HOST': '${rds_endpoint}',\n    'PORT': '5432',\n  }\n}",
+    s,
+    flags=re.S
+)
+
+p.write_text(s)
+PY
+
+# Migraciones
+python3 manage.py makemigrations
+python3 manage.py migrate
+
+# Ajustar subscriber.py (rabbit_host y topic wildcard)
+python3 - <<PY
+import pathlib, re
+p = pathlib.Path("subscriber.py")
+s = p.read_text()
+s = re.sub(r"rabbit_host\s*=\s*'.*?'", "rabbit_host='${broker_private_ip}'", s)
+# nos suscribimos a ML.505.# como pide el lab
+s = s.replace("ML.505.Temperature", "ML.505.#")
+p.write_text(s)
+PY
+
+# Correr el servidor Django en background (systemd servicio simple)
+cat >/etc/systemd/system/monitoringapp.service << 'UNIT'
+[Unit]
+Description=MonitoringApp Django
+After=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/ISIS2503-MonitoringApp
+ExecStart=/usr/bin/python3 manage.py runserver 0.0.0.0:8080
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable monitoringapp
+systemctl start monitoringapp

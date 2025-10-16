@@ -1,0 +1,13 @@
+#!/bin/bash
+set -eux
+apt-get update -y
+apt-get install -y rabbitmq-server
+
+# Habilitar dashboard y crear usuario del lab
+rabbitmq-plugins enable rabbitmq_management
+rabbitmqctl add_user ${rabbit_user} ${rabbit_password} || true
+rabbitmqctl set_user_tags ${rabbit_user} administrator
+rabbitmqctl set_permissions -p / ${rabbit_user} ".*" ".*" ".*"
+
+systemctl enable rabbitmq-server
+systemctl restart rabbitmq-server
